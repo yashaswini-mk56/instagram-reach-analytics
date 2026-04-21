@@ -2,45 +2,35 @@
 <html>
 <head>
     <title>Instagram Reach Predictor</title>
-
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-
-            /*  Instagram Gradient */
             background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
             background-size: 300% 300%;
             animation: gradientBG 6s ease infinite;
-
             text-align: center;
             padding: 50px;
         }
-
-        /* 🔥 Animation */
         @keyframes gradientBG {
             0% {background-position: 0% 50%;}
             50% {background-position: 100% 50%;}
             100% {background-position: 0% 50%;}
         }
-
         .card {
             background: white;
             padding: 30px;
             border-radius: 15px;
-            width: 350px;
+            width: 380px;
             margin: auto;
             box-shadow: 0px 8px 25px rgba(0,0,0,0.2);
         }
-
         input {
             width: 90%;
             padding: 10px;
-            margin: 10px 0;
+            margin: 8px 0;
             border-radius: 6px;
             border: 1px solid #ccc;
         }
-
-        /* 🔥 Instagram Style Button */
         button {
             padding: 10px 20px;
             background: linear-gradient(45deg, #dd2a7b, #8134af);
@@ -49,12 +39,9 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            margin-top: 10px;
         }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
+        button:hover { opacity: 0.9; }
         #result {
             margin-top: 20px;
             font-weight: bold;
@@ -62,14 +49,17 @@
         }
     </style>
 </head>
-
 <body>
-
 <div class="card">
     <h2>📊 Instagram Reach Predictor</h2>
 
-    <input type="number" id="followers" placeholder="Followers"><br>
-    <input type="number" id="hashtags" placeholder="Hashtags"><br>
+    <input type="number" id="followers" placeholder="Number of Followers"><br>
+    <input type="number" id="hashtags" placeholder="Number of Hashtags"><br>
+    <input type="number" id="likes" placeholder="Avg Likes per Post"><br>
+    <input type="number" id="comments" placeholder="Avg Comments per Post"><br>
+    <input type="number" id="shares" placeholder="Avg Shares per Post"><br>
+    <input type="number" id="saves" placeholder="Avg Saves per Post"><br>
+    <input type="number" id="caption_length" placeholder="Caption Length (characters)"><br>
 
     <button onclick="predict()">Predict</button>
 
@@ -78,23 +68,30 @@
 
 <script>
 function predict() {
-
     let followers = document.getElementById("followers").value;
     let hashtags = document.getElementById("hashtags").value;
+    let likes = document.getElementById("likes").value;
+    let comments = document.getElementById("comments").value;
+    let shares = document.getElementById("shares").value;
+    let saves = document.getElementById("saves").value;
+    let caption_length = document.getElementById("caption_length").value;
 
     if (!followers || !hashtags) {
-        alert("Please enter all values!");
+        alert("Please enter at least Followers and Hashtags!");
         return;
     }
 
     fetch("http://127.0.0.1:5000/predict", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             follower_count: followers,
-            hashtags_count: hashtags
+            hashtags_count: hashtags,
+            likes: likes || 0,
+            comments: comments || 0,
+            shares: shares || 0,
+            saves: saves || 0,
+            caption_length: caption_length || 0
         })
     })
     .then(res => res.json())
@@ -104,10 +101,9 @@ function predict() {
             "⏰ Best Time: " + data.best_time;
     })
     .catch(() => {
-        alert("Backend not running!");
+        alert("Backend not running! Make sure Flask is running.");
     });
 }
 </script>
-
 </body>
 </html>
