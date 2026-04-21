@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Instagram Reach Predictor</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+
+            /*  Instagram Gradient */
+            background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+            background-size: 300% 300%;
+            animation: gradientBG 6s ease infinite;
+
+            text-align: center;
+            padding: 50px;
+        }
+
+        /* 🔥 Animation */
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 350px;
+            margin: auto;
+            box-shadow: 0px 8px 25px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        /* 🔥 Instagram Style Button */
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #dd2a7b, #8134af);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>📊 Instagram Reach Predictor</h2>
+
+    <input type="number" id="followers" placeholder="Followers"><br>
+    <input type="number" id="hashtags" placeholder="Hashtags"><br>
+
+    <button onclick="predict()">Predict</button>
+
+    <p id="result"></p>
+</div>
+
+<script>
+function predict() {
+
+    let followers = document.getElementById("followers").value;
+    let hashtags = document.getElementById("hashtags").value;
+
+    if (!followers || !hashtags) {
+        alert("Please enter all values!");
+        return;
+    }
+
+    fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            follower_count: followers,
+            hashtags_count: hashtags
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").innerHTML =
+            "🚀 Predicted Reach: " + data.predicted_reach + "<br>" +
+            "⏰ Best Time: " + data.best_time;
+    })
+    .catch(() => {
+        alert("Backend not running!");
+    });
+}
+</script>
+
+</body>
+</html>

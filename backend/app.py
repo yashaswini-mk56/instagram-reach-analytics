@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+
 @app.route('/')
 def home():
     return "Backend is running!"
@@ -22,11 +25,19 @@ def predict():
 
     result = dummy_predict(data)
 
+    followers = int(data.get('follower_count', 0))
+
+    # 🔥 Dynamic time logic
+    if followers < 5000:
+        best_time = "Monday 6 PM"
+    elif followers < 20000:
+        best_time = "Wednesday 7 PM"
+    else:
+        best_time = "Sunday 8 PM"
+
     return jsonify({
         "predicted_reach": result,
-        "best_time": "Monday 6 PM"
+        "best_time": best_time
     })
-
-
 if __name__ == '__main__':
     app.run(debug=True)
