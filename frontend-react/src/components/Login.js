@@ -13,6 +13,8 @@ function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -29,7 +31,7 @@ function Login({ onLogin }) {
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         if (!userCredential.user.emailVerified) {
-          setError('Please verify your email first! Check your inbox.');
+          setError('Please verify your email first! Check your inbox or spam folder.');
           await auth.signOut();
         } else {
           onLogin(userCredential.user.email);
@@ -45,6 +47,19 @@ function Login({ onLogin }) {
       else setError(err.message);
     }
     setLoading(false);
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      await auth.signOut();
+      setResendSuccess(true);
+    } catch (err) {
+      setError('Could not resend. Please try again.');
+    }
+    setResendLoading(false);
   };
 
   if (verificationSent) {
@@ -68,12 +83,39 @@ function Login({ onLogin }) {
           <p style={{ color: '#555', marginBottom: '10px' }}>
             We sent a verification link to:
           </p>
-          <p style={{ color: '#8134af', fontWeight: 'bold', marginBottom: '20px' }}>{email}</p>
-          <p style={{ color: '#888', fontSize: '14px', marginBottom: '25px' }}>
-            Click the link in the email, then come back and login!
+          <p style={{ color: '#8134af', fontWeight: 'bold', marginBottom: '10px' }}>{email}</p>
+          <p style={{ color: '#888', fontSize: '13px', marginBottom: '20px' }}>
+            ⚠️ Check your <strong>Spam/Junk</strong> folder too!
           </p>
+
+          {resendSuccess && (
+            <p style={{ color: 'green', fontSize: '13px', marginBottom: '10px' }}>
+              ✅ Verification email resent successfully!
+            </p>
+          )}
+
           <button
-            onClick={() => { setVerificationSent(false); setIsSignup(false); }}
+            onClick={handleResendVerification}
+            disabled={resendLoading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: 'white',
+              color: '#8134af',
+              border: '2px solid #8134af',
+              borderRadius: '10px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              marginBottom: '10px',
+              opacity: resendLoading ? 0.7 : 1
+            }}
+          >
+            {resendLoading ? '⏳ Sending...' : '🔄 Resend Verification Email'}
+          </button>
+
+          <button
+            onClick={() => { setVerificationSent(false); setIsSignup(false); setResendSuccess(false); }}
             style={{
               width: '100%',
               padding: '14px',
