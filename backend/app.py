@@ -7,7 +7,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Load the real ML model and features
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, '..', 'ml_model', 'model.pkl')
 FEATURES_PATH = os.path.join(BASE_DIR, '..', 'ml_model', 'features.pkl')
@@ -35,35 +34,38 @@ def predict():
         data = request.json
         print("📥 Received data:", data)
 
-        # Build input array in correct feature order
         input_values = []
         for feature in feature_names:
             value = data.get(feature, 0)
             input_values.append(float(value))
 
         input_array = np.array([input_values])
-        print("🔢 Input array:", input_array)
-
-        # Real ML prediction
         predicted_reach = model.predict(input_array)[0]
         predicted_reach = round(float(predicted_reach), 2)
 
-        # Best time logic based on predicted reach
+        # Improved best time logic
         followers = float(data.get('follower_count', 0))
-        if followers < 5000:
-            best_time = "Monday 6 PM"
-        elif followers < 20000:
+        likes = float(data.get('likes', 0))
+        engagement = likes / followers if followers > 0 else 0
+
+        if engagement > 0.1:
+            best_time = "Friday 6 PM"
+        elif engagement > 0.05:
             best_time = "Wednesday 7 PM"
-        else:
+        elif followers > 50000:
             best_time = "Sunday 8 PM"
+        elif followers > 10000:
+            best_time = "Thursday 9 PM"
+        else:
+            best_time = "Monday 6 PM"
 
         print("✅ Predicted reach:", predicted_reach)
 
         return jsonify({
             "predicted_reach": predicted_reach,
             "best_time": best_time,
-            "model": "Real ML Model",
-            "features_used": list(feature_names)
+            "model": "Random Forest",
+            "engagement_rate": round(engagement * 100, 2)
         })
 
     except Exception as e:
