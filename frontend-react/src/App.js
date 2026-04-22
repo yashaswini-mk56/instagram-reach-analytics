@@ -1,33 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Predictor from './components/Predictor';
 import History from './components/History';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
+import ConnectInstagram from './components/ConnectInstagram';
+import { auth } from './firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import './App.css';
 
 function App() {
   const [page, setPage] = useState('predictor');
   const [history, setHistory] = useState([]);
   const [user, setUser] = useState(null);
+  const [instagramUsername, setInstagramUsername] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const addToHistory = (entry) => {
     setHistory(prev => [entry, ...prev]);
   };
 
-  const handleLogin = (username) => {
-    setUser(username);
-    setPage('predictor');
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut(auth);
     setUser(null);
+    setInstagramUsername('');
     setHistory([]);
     setPage('predictor');
   };
 
-  if (!user) {
-    return <Login onLogin={handleLogin} />;
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontSize: '24px'
+      }}>
+        ⏳ Loading...
+      </div>
+    );
   }
+
+  if (!user) return <Login onLogin={() => {}} />;
+  if (!instagramUsername) return <ConnectInstagram onConnect={setInstagramUsername} />;
 
   return (
     <div>
@@ -46,7 +70,7 @@ function App() {
         borderBottom: '1px solid rgba(255,255,255,0.2)'
       }}>
         <h2 style={{ textShadow: '0px 2px 8px rgba(0,0,0,0.2)' }}>📊 InstaAnalytics</h2>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           {['predictor', 'history', 'dashboard'].map((p) => (
             <button key={p} onClick={() => setPage(p)} style={{
               background: page === p ? 'white' : 'transparent',
@@ -55,13 +79,12 @@ function App() {
               padding: '8px 18px',
               borderRadius: '20px',
               cursor: 'pointer',
-              fontWeight: 'bold',
-              textTransform: 'capitalize'
+              fontWeight: 'bold'
             }}>
               {p === 'predictor' ? '🚀 Predictor' : p === 'history' ? '📜 History' : '📊 Dashboard'}
             </button>
           ))}
-          <span style={{ marginLeft: '10px', opacity: 0.9 }}>👤 {user}</span>
+          <span style={{ opacity: 0.9, fontSize: '13px' }}>📸 @{instagramUsername}</span>
           <button onClick={handleLogout} style={{
             background: 'transparent',
             color: 'white',
@@ -74,7 +97,7 @@ function App() {
         </div>
       </nav>
 
-      {page === 'predictor' && <Predictor addToHistory={addToHistory} />}
+      {page === 'predictor' && <Predictor addToHistory={addToHistory} instagramUsername={instagramUsername} />}
       {page === 'history' && <History history={history} />}
       {page === 'dashboard' && <Dashboard history={history} />}
     </div>

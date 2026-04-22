@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-function Predictor({ addToHistory }) {
+function Predictor({ addToHistory, instagramUsername }) {
   const [form, setForm] = useState({
     follower_count: '',
     hashtags_count: '',
@@ -10,7 +10,8 @@ function Predictor({ addToHistory }) {
     comments: '',
     shares: '',
     saves: '',
-    caption_length: ''
+    caption_length: '',
+    content_type: 'Post'
   });
 
   const [result, setResult] = useState(null);
@@ -35,6 +36,7 @@ function Predictor({ addToHistory }) {
         ...form,
         predicted_reach: response.data.predicted_reach,
         best_time: response.data.best_time,
+        engagement_rate: response.data.engagement_rate,
         date: new Date().toLocaleString()
       });
     } catch (err) {
@@ -44,42 +46,64 @@ function Predictor({ addToHistory }) {
   };
 
   const chartData = result ? [
-    { name: 'Followers', value: parseInt(form.follower_count) },
+    { name: 'Followers', value: parseInt(form.follower_count) || 0 },
     { name: 'Likes', value: parseInt(form.likes) || 0 },
     { name: 'Comments', value: parseInt(form.comments) || 0 },
     { name: 'Shares', value: parseInt(form.shares) || 0 },
     { name: 'Saves', value: parseInt(form.saves) || 0 },
   ] : [];
 
-  const inputs = [
-    { name: 'follower_count', placeholder: '👥 Number of Followers', required: true },
-    { name: 'hashtags_count', placeholder: '#️⃣ Number of Hashtags', required: true },
-    { name: 'likes', placeholder: '❤️ Avg Likes per Post' },
-    { name: 'comments', placeholder: '💬 Avg Comments per Post' },
-    { name: 'shares', placeholder: '↗️ Avg Shares per Post' },
-    { name: 'saves', placeholder: '🔖 Avg Saves per Post' },
-    { name: 'caption_length', placeholder: '📝 Caption Length (characters)' },
-  ];
+  const contentTypes = ['Post', 'Reel', 'Story', 'Carousel'];
 
   return (
     <div style={{ padding: '30px', maxWidth: '900px', margin: 'auto' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '10px', color: 'white', textShadow: '0px 2px 8px rgba(0,0,0,0.3)' }}>
-  🚀 Predict Your Instagram Reach
-    </h2>
-    <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.85)', marginBottom: '30px', fontWeight: '500' }}>
-      Enter your post details below to get an AI-powered reach prediction
-    </p>
+      <h2 style={{ textAlign: 'center', marginBottom: '5px', color: 'white', textShadow: '0px 2px 8px rgba(0,0,0,0.3)' }}>
+        🚀 Predict Your Instagram Reach
+      </h2>
+      <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.85)', marginBottom: '5px', fontWeight: '500' }}>
+        @{instagramUsername} — Enter your post details for AI-powered prediction
+      </p>
+
+      {/* Content Type Selector */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
+        {contentTypes.map(type => (
+          <button
+            key={type}
+            onClick={() => setForm({ ...form, content_type: type })}
+            style={{
+              padding: '10px 22px',
+              borderRadius: '20px',
+              border: '2px solid white',
+              background: form.content_type === type ? 'white' : 'transparent',
+              color: form.content_type === type ? '#8134af' : 'white',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {type === 'Post' ? '🖼️' : type === 'Reel' ? '🎬' : type === 'Story' ? '⭕' : '🔄'} {type}
+          </button>
+        ))}
+      </div>
 
       {/* Input Card */}
       <div style={{
-        background: 'white',
+        background: 'rgba(255,255,255,0.95)',
         borderRadius: '16px',
         padding: '30px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-        marginBottom: '30px'
+        marginBottom: '25px'
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-          {inputs.map((input) => (
+          {[
+            { name: 'follower_count', placeholder: '👥 Number of Followers' },
+            { name: 'hashtags_count', placeholder: '#️⃣ Number of Hashtags' },
+            { name: 'likes', placeholder: '❤️ Avg Likes per Post' },
+            { name: 'comments', placeholder: '💬 Avg Comments per Post' },
+            { name: 'shares', placeholder: '↗️ Avg Shares per Post' },
+            { name: 'saves', placeholder: '🔖 Avg Saves per Post' },
+            { name: 'caption_length', placeholder: '📝 Caption Length (characters)' },
+          ].map((input) => (
             <input
               key={input.name}
               type="number"
@@ -90,10 +114,11 @@ function Predictor({ addToHistory }) {
               style={{
                 padding: '12px 15px',
                 borderRadius: '8px',
-                border: '1px solid #ddd',
+                border: '1.5px solid #ddd',
                 fontSize: '14px',
                 outline: 'none',
-                width: '100%'
+                width: '100%',
+                boxSizing: 'border-box'
               }}
             />
           ))}
@@ -106,10 +131,10 @@ function Predictor({ addToHistory }) {
             onClick={handlePredict}
             disabled={loading}
             style={{
-              background: 'linear-gradient(45deg, #dd2a7b, #8134af)',
+              background: 'linear-gradient(45deg, #f58529, #dd2a7b, #8134af)',
               color: 'white',
               border: 'none',
-              padding: '14px 40px',
+              padding: '14px 50px',
               borderRadius: '25px',
               fontSize: '16px',
               fontWeight: 'bold',
@@ -125,25 +150,29 @@ function Predictor({ addToHistory }) {
       {/* Result Card */}
       {result && (
         <div style={{
-          background: 'linear-gradient(45deg, #dd2a7b, #8134af)',
+          background: 'linear-gradient(45deg, #f58529, #dd2a7b, #8134af)',
           borderRadius: '16px',
           padding: '30px',
           color: 'white',
           textAlign: 'center',
-          marginBottom: '30px',
+          marginBottom: '25px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
         }}>
-          <h3 style={{ fontSize: '18px', marginBottom: '15px' }}>📊 Prediction Results</h3>
+          <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>📊 Prediction Results for {form.content_type}</h3>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
             <div>
-              <p style={{ fontSize: '14px', opacity: 0.8 }}>Predicted Reach</p>
-              <p style={{ fontSize: '36px', fontWeight: 'bold' }}>
+              <p style={{ fontSize: '13px', opacity: 0.85 }}>Predicted Reach</p>
+              <p style={{ fontSize: '38px', fontWeight: 'bold' }}>
                 {result.predicted_reach.toLocaleString()}
               </p>
             </div>
             <div>
-              <p style={{ fontSize: '14px', opacity: 0.8 }}>Best Time to Post</p>
-              <p style={{ fontSize: '24px', fontWeight: 'bold' }}>⏰ {result.best_time}</p>
+              <p style={{ fontSize: '13px', opacity: 0.85 }}>Best Time to Post</p>
+              <p style={{ fontSize: '22px', fontWeight: 'bold' }}>⏰ {result.best_time}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: '13px', opacity: 0.85 }}>Engagement Rate</p>
+              <p style={{ fontSize: '22px', fontWeight: 'bold' }}>📈 {result.engagement_rate}%</p>
             </div>
           </div>
         </div>
@@ -152,7 +181,7 @@ function Predictor({ addToHistory }) {
       {/* Chart */}
       {result && (
         <div style={{
-          background: 'white',
+          background: 'rgba(255,255,255,0.95)',
           borderRadius: '16px',
           padding: '30px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
