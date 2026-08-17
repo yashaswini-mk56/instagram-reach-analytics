@@ -1,0 +1,28 @@
+{
+  "feature_names": [
+    "followers",
+    "post_type",
+    "hashtags_count",
+    "caption_length",
+    "likes",
+    "comments",
+    "shares",
+    "saves",
+    "posting_day",
+    "posting_hour"
+  ],
+  "importances": {
+    "followers": 0.020911569814843458,
+    "post_type": 0.004972860485790621,
+    "hashtags_count": 0.01741311984843485,
+    "caption_length": 0.028605144041665045,
+    "likes": 0.72986917927246,
+    "comments": 0.01669538655174754,
+    "shares": 0.05198647899620613,
+    "saves": 0.068592263844319,
+    "posting_day": 0.007754220329413356,
+    "posting_hour": 0.053199776815120205
+  },
+  "train_r2": 0.9738,
+  "test_r2": 0.846
+}
