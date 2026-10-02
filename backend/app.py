@@ -17,6 +17,7 @@ except ImportError:
     HAS_ML = False
 
 from ai_advisor import calculate_ai_best_times, generate_ai_content_tips
+from content_strategist import analyze_content_strategy
 
 app = Flask(__name__)
 CORS(app)
@@ -361,6 +362,40 @@ def best_time():
         'heatmap': result['heatmap'],
         'top_recommendations': result['top_recommendations']
     })
+
+# ----------------- SMART CONTENT STRATEGIST ROUTE -----------------
+
+@app.route('/api/strategist/analyze', methods=['POST'])
+def strategist_analyze():
+    data = request.get_json() or {}
+
+    def ml_predict_wrapper(input_data):
+        if rf_model is not None and scaler is not None and HAS_ML:
+            feats = [[
+                float(input_data.get('followers', 10000)),
+                int(input_data.get('post_type', 1)),
+                int(input_data.get('hashtags_count', 10)),
+                float(input_data.get('caption_length', 150)),
+                float(input_data.get('likes', 400)),
+                float(input_data.get('comments', 35)),
+                float(input_data.get('shares', 25)),
+                float(input_data.get('saves', 40)),
+                int(input_data.get('posting_day', 3)),
+                int(input_data.get('posting_hour', 18))
+            ]]
+            scaled = scaler.transform(feats)
+            return int(rf_model.predict(scaled)[0])
+        else:
+            return fallback_predict(input_data)
+
+    try:
+        strategy_result = analyze_content_strategy(data, ml_predict_fn=ml_predict_wrapper)
+        return jsonify({
+            'success': True,
+            'data': strategy_result
+        })
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 400
 
 @app.route('/api/feature-importance', methods=['GET'])
 def feature_importance():
